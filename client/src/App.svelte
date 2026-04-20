@@ -3,87 +3,140 @@
   import viteLogo from './assets/vite.svg'
   import heroImg from './assets/hero.png'
   import Counter from './lib/Counter.svelte'
+
+  const ws = new WebSocket("ws://localhost:3000")
+  let screen = $state('menu') // 'menu' | 'game'
+  let gameBoard = $state(Array(100).fill(null));
+  let selectedShip = $state(null)
+  let orientation = $state('horizontal')
+  let client_id = 0;
+  let myTurn = null;
+  const ships = [
+    { name: 'Carrier', length: 5 },
+    { name: 'Battleship', length: 4 },
+    { name: 'Cruiser', length: 3 },
+    { name: 'Submarine', length: 3 },
+    { name: 'Destroyer', length: 2 },
+  ]
+
+  function selectShip(ship) {
+    console.log(ship);
+    selectedShip = ship
+  }
+
+  function placeOnCell(x, y) {
+    if (!selectedShip) return
+    // validate and place
+  }
+  function startGame() {
+    ws.send(JSON.stringify({
+      type: "init"
+    }));
+  }
+  
+  ws.onopen = () => {
+    console.log("Connected to server!");
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log("onmessage", data);
+    if (data.type === 'status') {
+      if (data.status === 'waiting') {
+        screen = 'waiting'
+      } else if (data.status === 'start') {
+        myTurn = data.turn
+        screen = 'placement'
+      } else if (data.status === 'opponentLeft') {
+        screen = 'menu'
+      }
+    }
+  }
 </script>
 
-<section id="center">
-  <div class="hero">
-    <img src={heroImg} class="base" width="170" height="179" alt="" />
-    <img src={svelteLogo} class="framework" alt="Svelte logo" />
-    <img src={viteLogo} class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/App.svelte</code> and save to test <code>HMR</code></p>
-  </div>
-  <Counter />
-</section>
+<main>
+  
+  <div class="container">
+    {#if screen === 'menu'}
+    <div class="menu">
+      <h1>Battleship</h1>
+      <button onclick={startGame}>Start Game</button>
+    </div>
 
-<div class="ticks"></div>
+    {:else if screen === 'waiting'}
+    <div class="waiting">
+      <h1>Waiting for opponent...</h1>
+      <div class="spinner"></div>
+    </div>
 
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true">
-      <use href="/icons.svg#documentation-icon"></use>
-    </svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank" rel="noreferrer">
-          <img class="logo" src={viteLogo} alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://svelte.dev/" target="_blank" rel="noreferrer">
-          <img class="button-icon" src={svelteLogo} alt="" />
-          Learn more
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true">
-      <use href="/icons.svg#social-icon"></use>
-    </svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li>
-        <a href="https://github.com/vitejs/vite" target="_blank" rel="noreferrer">
-          <svg class="button-icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#github-icon"></use>
-          </svg>
-          GitHub
-        </a>
-      </li>
-      <li>
-        <a href="https://chat.vite.dev/" target="_blank" rel="noreferrer">
-          <svg class="button-icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#discord-icon"></use>
-          </svg>
-          Discord
-        </a>
-      </li>
-      <li>
-        <a href="https://x.com/vite_js" target="_blank" rel="noreferrer">
-          <svg class="button-icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#x-icon"></use>
-          </svg>
-          X.com
-        </a>
-      </li>
-      <li>
-        <a href="https://bsky.app/profile/vite.dev" target="_blank" rel="noreferrer">
-          <svg class="button-icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#bluesky-icon"></use>
-          </svg>
-          Bluesky
-        </a>
-      </li>
-    </ul>
-  </div>
-</section>
 
-<div class="ticks"></div>
-<section id="spacer"></section>
+    {:else if screen === 'placement'}
+    <h1>Battleship</h1>
+    <div class="grid">
+      {#each gameBoard as square, idx}
+        <button class="game-square" onclick={() => playerMove(idx)}>{square}</button>
+      {/each}
+    </div>
+    <div class="ships">
+      {#each ships as ship}
+        <div class="ship-row">
+          <span>{ship.name}</span>
+          <div class="ship" onclick={() => selectShip(ship)}>
+            {#each Array(ship.length) as _, i}
+              <div class="ship-cell"></div>
+            {/each}
+          </div>
+        </div>
+      {/each}
+    </div>
+    {/if}
+  </div>
+</main>
+
+<style>
+  button.game-square {
+    width: 50px;
+    height: 50px;
+    border: 1px black solid;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(10, 50px);
+    grid-template-rows: repeat(10, 50px);
+  }
+  .container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .ship {
+    display: flex;
+    gap: 0;
+  }
+
+  .ship:hover .ship-cell{
+    background-color: darkgray;
+  }
+
+  .ship-cell {
+    width: 50px;
+    height: 50px;
+    background-color: gray;
+    padding: 0;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #ccc;
+    border-top-color: #333;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
