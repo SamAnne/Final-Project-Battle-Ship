@@ -33,7 +33,6 @@ wss.on('connection', (ws) => {
           ws.opponent.send(JSON.stringify({ type: 'status', status: 'game', turn: true }));
         }
         else {
-          console.log("opponent not ready");
           ws.send(JSON.stringify({ type: 'status', status: 'onr' })); // onr stands for opponent not ready
         }
       }
@@ -54,6 +53,8 @@ wss.on('connection', (ws) => {
       ws.opponent.send(JSON.stringify({ type: 'move', status: result, x: msg.y, y: msg.x, turn: true }));
       if (ws.opponent.board.every(row => row.every(cell => cell !== 'ship'))){
         ws.send(JSON.stringify({type: "status", status: "win"}));
+        ws.ready = false;
+        ws.opponent.ready = false;
         ws.opponent.send(JSON.stringify({type: "status", status: "lose"}));
       }
     }

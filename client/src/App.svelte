@@ -41,7 +41,6 @@
     selectedShip = null;
     allShipsPlaced = false;
     myTurn = false;
-    result = null;
   }
 
   function ready(){
@@ -101,9 +100,11 @@
       } else if (data.status === 'win'){
         screen = 'end';
         result = data.status;
+        reset();
       } else if (data.status === 'lose'){
         screen = 'end';
         result = data.status;
+        reset();
       } else if (data.status === 'ol'){
         screen = 'waiting';
         opponentLeft = true;
