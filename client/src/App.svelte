@@ -3,13 +3,14 @@
   let screen = $state('menu') // 'menu' | 'game'
   let gameBoard = $state(Array.from({ length: 10 }, () => Array(10).fill(null)));
   let opponentBoard = $state(Array.from({ length: 10 }, () => Array(10).fill(null)));
-  let selectedShip = $state(null)
-  let orientation = $state('horizontal')
+  let selectedShip = $state(null);
+  let orientation = $state('horizontal');
   let client_id = 0;
   let placedShips = $state([])
   let allShipsPlaced = $state(false);
   let myTurn = $state(false);
   let result = $state(null);
+  let showHelp = $state(false);
   const ships = [
     { name: 'Carrier', length: 5 },
     { name: 'Battleship', length: 4 },
@@ -114,7 +115,19 @@
 </script>
 
 <main>
-  
+  <button class="helpBtn" onclick={() => showHelp = true}>?</button>
+  {#if showHelp}
+    <div class="overlay" onclick={() => showHelp = false}>
+      <div class="popup" onclick={(e) => e.stopPropagation()}>
+        <h1>Help</h1>
+        <p>To place your ships on the grid (only works horizontally), click on a ship then click on a spot on the grid.</p>
+        <p>If it is not your turn, the buttons will not be clickable, otherwise click a cell on the opponent's grid to fire</p>
+        <p>Red = hit, Blue = miss, Gray = ship</p>
+        <p>Sink all opponent ships to win!</p>
+        <button onclick={() => showHelp = false}>Close</button>
+      </div>
+    </div>
+  {/if}
   <div class="container">
     {#if screen === 'menu'}
     <div class="menu">
@@ -278,4 +291,35 @@
   button.game-square.hit { background-color: red; }
   button.game-square.miss { background-color: lightblue; }
   button.game-square.ship { background-color: gray; }
+
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+  }
+
+  .popup {
+    background: #16171d;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .helpBtn{
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 50;
+  }
 </style>

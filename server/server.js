@@ -38,7 +38,7 @@ wss.on('connection', (ws) => {
         }
         else {
           console.log("opponent not ready");
-          ws.send(JSON.stringify({ type: 'status', status: 'onr' })); // onr stands fro opponent not ready
+          ws.send(JSON.stringify({ type: 'status', status: 'onr' })); // onr stands for opponent not ready
         }
       }
       else if (msg.status === "initBoard"){
@@ -69,10 +69,10 @@ wss.on('connection', (ws) => {
       return
     }
 
-    // if they were in a game, notify opponent
+    // if they were in a game, let opponent know
     if (ws.opponent) {
       ws.opponent.send(JSON.stringify({ type: 'status', status: 'ol' })) // ol = opponent left
-      ws.opponent.opponent = null  // clear the link
+      ws.opponent.opponent = null 
     }
   });
 })
