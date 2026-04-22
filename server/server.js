@@ -1,7 +1,6 @@
-import { WebSocketServer } from 'ws' 
+import { WebSocketServer } from 'ws'; 
 
-const wss = new WebSocketServer({ port: 3000 })
-let client_id = 0;
+const wss = new WebSocketServer({ port: 3000 });
 let waitingPlayer = null;
 
 wss.on('connection', (ws) => {
@@ -12,8 +11,7 @@ wss.on('connection', (ws) => {
       if (waitingPlayer === null) {
         // first player, make them wait
         waitingPlayer = ws
-        client_id++
-        ws.send(JSON.stringify({ type: 'status', status: 'waiting', id: client_id }))
+        ws.send(JSON.stringify({ type: 'status', status: 'waiting' }))
       } else {
         // second player joined, start the game
         const opponent = waitingPlayer
@@ -30,9 +28,7 @@ wss.on('connection', (ws) => {
     if (msg.type === "status"){
       if (msg.status === "ready"){
         ws.ready = true;
-        console.log("player ready");
         if (ws.opponent.ready){
-          console.log("opponent ready");
           ws.send(JSON.stringify({ type: 'status', status: 'game', turn: false }));
           ws.opponent.send(JSON.stringify({ type: 'status', status: 'game', turn: true }));
         }
@@ -72,7 +68,9 @@ wss.on('connection', (ws) => {
     // if they were in a game, let opponent know
     if (ws.opponent) {
       ws.opponent.send(JSON.stringify({ type: 'status', status: 'ol' })) // ol = opponent left
-      ws.opponent.opponent = null 
+      waitingPlayer = ws.opponent;
+      ws.opponent.opponent = null;
+      ws.board = null; 
     }
   });
 })

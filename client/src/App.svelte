@@ -1,16 +1,16 @@
 <script>
   const ws = new WebSocket("ws://localhost:3000")
-  let screen = $state('menu') // 'menu' | 'game'
+  let screen = $state('menu')
   let gameBoard = $state(Array.from({ length: 10 }, () => Array(10).fill(null)));
   let opponentBoard = $state(Array.from({ length: 10 }, () => Array(10).fill(null)));
   let selectedShip = $state(null);
   let orientation = $state('horizontal');
-  let client_id = 0;
   let placedShips = $state([])
   let allShipsPlaced = $state(false);
   let myTurn = $state(false);
   let result = $state(null);
   let showHelp = $state(false);
+  let opponentLeft = $state(false);
   const ships = [
     { name: 'Carrier', length: 5 },
     { name: 'Battleship', length: 4 },
@@ -35,9 +35,13 @@
   }
 
   function reset(){
-    gameBoard = Array.from({ length: 10 }, () => Array(10).fill(null))
+    gameBoard = Array.from({ length: 10 }, () => Array(10).fill(null));
+    opponentBoard = Array.from({ length: 10 }, () => Array(10).fill(null));
     placedShips = [];
-    selectedShip = null
+    selectedShip = null;
+    allShipsPlaced = false;
+    myTurn = false;
+    result = null;
   }
 
   function ready(){
@@ -80,6 +84,7 @@
       if (data.status === 'waiting') {
         screen = 'waiting'
       } else if (data.status === 'start') {
+        opponentLeft = false;
         screen = 'placement'
       } else if (data.status === 'opponentLeft') {
         screen = 'menu'
@@ -99,6 +104,10 @@
       } else if (data.status === 'lose'){
         screen = 'end';
         result = data.status;
+      } else if (data.status === 'ol'){
+        screen = 'waiting';
+        opponentLeft = true;
+        reset();
       }
     }
     else if (data.type === 'move'){
@@ -136,6 +145,9 @@
     </div>
 
     {:else if screen === 'waiting'}
+    {#if opponentLeft}
+      <h1>Opponent Left</h1>
+    {/if}
     <div class="waiting settings">
       <h1>Waiting for opponent...</h1>
       <div class="spinner"></div>
@@ -221,6 +233,8 @@
     {:else if screen === 'end'}
     <h1>You {result}!</h1>
     <button onclick={() => screen = 'menu'}>Play Again</button>
+    {:else if screen === 'ol'}
+
     {/if}
   </div>
 </main>
